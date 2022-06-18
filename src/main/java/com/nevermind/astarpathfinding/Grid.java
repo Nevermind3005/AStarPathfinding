@@ -4,10 +4,7 @@ import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
-
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 
 public class Grid extends Canvas {
@@ -21,6 +18,7 @@ public class Grid extends Canvas {
     private double nodeGap;
     private Node startNode;
     private Node endNode;
+    private AStar aStar;
 
     public Grid(Group group) {
         this.boxes = new Box[16 * 16];
@@ -35,6 +33,7 @@ public class Grid extends Canvas {
         generateBoxes();
         generateNodes();
         connectNeighbourNodes();
+        aStar = new AStar(nodes, nodeWidth, nodeHeight, startNode, endNode, this);
     }
 
     private void generateBoxes() {
@@ -113,16 +112,19 @@ public class Grid extends Canvas {
         int y = (int) (mouseY / nodeSize);
         if (Input.keys.contains(KeyCode.S)) {
             startNode = nodes[y * nodeWidth + x];
+
             updateBoxes();
-            findPath();
+            aStar.setStartNode(startNode);
+            aStar.findPath();
         } else if (Input.keys.contains(KeyCode.E)) {
             endNode = nodes[y * nodeWidth + x];
             updateBoxes();
-            findPath();
+            aStar.setEndNode(endNode);
+            aStar.findPath();
         } else if (x < nodeWidth && y < nodeHeight) {
             nodes[y * nodeWidth + x].isBorder = !nodes[y * nodeWidth + x].isBorder;
             updateBoxes();
-            findPath();
+            aStar.findPath();
         }
     }
 
