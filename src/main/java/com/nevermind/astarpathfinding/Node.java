@@ -40,6 +40,19 @@ public class Node {
 
     @Override
     public String toString() {
-        return "X:" + x + " Y:" + y;
+        return "X:" + x + " Y:" + y + " Goal: " + globalGoal;
     }
+
+    public int compareTo(Node n) {
+        if (this.globalGoal > n.globalGoal) {
+            return 1;
+        }
+        if (this.globalGoal < n.globalGoal) {
+            return - 1;
+        }
+        return 0;
+    }
+
+
+
 }

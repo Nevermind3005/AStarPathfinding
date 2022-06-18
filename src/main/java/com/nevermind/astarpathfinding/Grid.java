@@ -5,6 +5,9 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 public class Grid extends Canvas {
@@ -94,6 +97,16 @@ public class Grid extends Canvas {
         }
     }
 
+    public void drawPath() {
+        if (endNode != null) {
+            Node p = endNode.parent;
+            while (p != null && p != startNode) {
+                boxes[p.y * nodeWidth + p.x].draw(Color.ORCHID,Color.WHITE);
+                p = p.parent;
+            }
+        }
+    }
+
     //
     public void setMousePos(double mouseX, double mouseY) {
         int x = (int) (mouseX / nodeSize);
@@ -108,8 +121,9 @@ public class Grid extends Canvas {
             findPath();
         } else if (x < nodeWidth && y < nodeHeight) {
             nodes[y * nodeWidth + x].isBorder = !nodes[y * nodeWidth + x].isBorder;
+            updateBoxes();
+            findPath();
         }
-        updateBoxes();
     }
 
     //Returns the distance between two nodes
@@ -129,19 +143,33 @@ public class Grid extends Canvas {
             }
         }
         Node currentNode = startNode;
-        startNode.localGoal = 0.0f;
+        startNode.localGoal = 0.0d;
         startNode.globalGoal = distance(startNode, endNode);
-        System.out.println(startNode.globalGoal);
         LinkedList<Node> notVisited = new LinkedList<>();
         notVisited.add(startNode);
         while (!notVisited.isEmpty() && currentNode != endNode) {
-            currentNode = notVisited.poll();
-            for (Node node:currentNode.neighbours) {
-                if (!node.visited) {
-                    notVisited.add(node);
-                    currentNode.visited = true;
+            Collections.sort(notVisited, Node::compareTo);
+            while (!notVisited.isEmpty() && notVisited.getFirst().visited) {
+                notVisited.removeFirst();
+            }
+            if (notVisited.isEmpty()) {
+                break;
+            }
+            currentNode = notVisited.getFirst();
+            currentNode.visited = true;
+            for (Node neighbourNode:currentNode.neighbours) {
+                if (!neighbourNode.visited && neighbourNode.isBorder == false) {
+                    notVisited.addLast(neighbourNode);
+                }
+                double possiblyLowerGoal = currentNode.localGoal + distance(currentNode, neighbourNode);
+                if (possiblyLowerGoal < neighbourNode.localGoal) {
+                    neighbourNode.parent = currentNode;
+                    neighbourNode.localGoal = possiblyLowerGoal;
+                    neighbourNode.globalGoal = neighbourNode.localGoal + distance(neighbourNode, endNode);
                 }
             }
         }
+        updateBoxes();
+        drawPath();
     }
 }
